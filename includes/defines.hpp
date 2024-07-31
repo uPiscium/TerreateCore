@@ -9,6 +9,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include <TerreateMath/TerreateMath.hpp>
+
 #ifndef TC_PI
 #define TC_PI 3.14159265358979
 #endif // TC_PI
@@ -72,6 +74,27 @@ typedef chrono::system_clock SystemClock;
 typedef chrono::steady_clock SteadyClock;
 template <typename T> using ZonedTimeT = chrono::zoned_time<T>;
 using ZonedTime = ZonedTimeT<NanoSec>;
+
+// TM types (TerreateMath types)
+typedef TerreateMath::Math::complex complex;
+typedef TerreateMath::Math::fraction fraction;
+typedef TerreateMath::Math::matrix matrix;
+
+typedef TerreateMath::Math::vec2 vec2;
+typedef TerreateMath::Math::vec3 vec3;
+typedef TerreateMath::Math::vec4 vec4;
+
+typedef TerreateMath::Math::mat2 mat2;
+typedef TerreateMath::Math::mat2x3 mat2x3;
+typedef TerreateMath::Math::mat2x4 mat2x4;
+typedef TerreateMath::Math::mat3x2 mat3x2;
+typedef TerreateMath::Math::mat3 mat3;
+typedef TerreateMath::Math::mat3x4 mat3x4;
+typedef TerreateMath::Math::mat4x2 mat4x2;
+typedef TerreateMath::Math::mat4x3 mat4x3;
+typedef TerreateMath::Math::mat4 mat4;
+
+typedef TerreateMath::Math::quat quat;
 
 // Concepts
 template <typename Derived, typename Base>
