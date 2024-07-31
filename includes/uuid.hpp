@@ -25,7 +25,7 @@ public:
     std::memcpy(mUUID, other.mUUID, sizeof(char) * 16);
   }
 
-  Byte const *GetUUID() const { return mUUID; }
+  Byte const *Raw() const { return mUUID; }
 
   Str ToString() const;
   size_t Hash() const { return std::hash<Str>{}(ToString()); }
