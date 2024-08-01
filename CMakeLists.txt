@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-option(ENABLE_TESTS "Enable test" ON)
+option(TERREATECORE_BUILD_TESTS "Enable test" ON)
 
 add_subdirectory(impls)
 
