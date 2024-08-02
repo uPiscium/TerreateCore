@@ -17,31 +17,33 @@ public:
 
   UUID const &GetUUID() const { return mUUID; }
 
-  bool operator==(TerreateObjectBase const &other) const {
+  virtual bool operator==(TerreateObjectBase const &other) const {
     return mUUID == other.mUUID;
   }
-  bool operator!=(TerreateObjectBase const &other) const {
+  virtual bool operator!=(TerreateObjectBase const &other) const {
     return mUUID != other.mUUID;
   }
-  bool operator<(TerreateObjectBase const &other) const {
+  virtual bool operator<(TerreateObjectBase const &other) const {
     return mUUID < other.mUUID;
   }
-  bool operator>(TerreateObjectBase const &other) const {
+  virtual bool operator>(TerreateObjectBase const &other) const {
     return mUUID > other.mUUID;
   }
-  bool operator<=(TerreateObjectBase const &other) const {
+  virtual bool operator<=(TerreateObjectBase const &other) const {
     return mUUID <= other.mUUID;
   }
-  bool operator>=(TerreateObjectBase const &other) const {
+  virtual bool operator>=(TerreateObjectBase const &other) const {
     return mUUID >= other.mUUID;
   }
 
-  TerreateObjectBase &operator=(TerreateObjectBase const &other);
-  TerreateObjectBase &operator=(TerreateObjectBase &&other);
+  virtual TerreateObjectBase &operator=(TerreateObjectBase const &other);
+  virtual TerreateObjectBase &operator=(TerreateObjectBase &&other);
 
-  operator Str() const { return mUUID.ToString(); }
-  operator Byte const *() const { return mUUID.Raw(); }
-  operator size_t() const { return mUUID.Hash(); }
+  virtual operator Str() const { return mUUID.ToString(); }
+  virtual operator Byte const *() const { return mUUID.Raw(); }
+  virtual operator size_t() const { return mUUID.Hash(); }
+  virtual operator UUID() const { return mUUID; }
+  virtual operator Bool() const { return mUUID; }
 };
 } // namespace TerreateCore::Core
 
