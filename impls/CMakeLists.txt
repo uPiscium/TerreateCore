@@ -12,7 +12,7 @@ function(SetIncludes)
 endfunction()
 
 function(Build)
-  add_library(${PROJECT_NAME} STATIC object.cpp uuid.cpp)
+  add_library(${PROJECT_NAME} STATIC object.cpp executor.cpp uuid.cpp)
   set_target_properties(
     ${PROJECT_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
                                LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
