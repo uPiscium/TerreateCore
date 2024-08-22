@@ -1,6 +1,8 @@
 #include "../includes/executor.hpp"
 #include "../includes/exceptions.hpp"
 
+#include <iostream>
+
 namespace TerreateCore::Executor {
 using namespace TerreateCore::Defines;
 
@@ -27,63 +29,48 @@ void TaskHandle::Wait() const {
   }
 }
 
-TaskHandle &TaskHandle::operator=(TaskHandle const &other) {
-  mFuture = other.mFuture;
-  mExecutionPriority = other.mExecutionPriority;
-  return *this;
-}
-
-TaskHandle &TaskHandle::operator=(TaskHandle &&other) noexcept {
-  mFuture = std::move(other.mFuture);
-  mExecutionPriority = other.mExecutionPriority;
-  return *this;
-}
-
-Task::Task(Function<void()> &&task, Uint const &priority) {
-  mTask = PackagedTask<void()>(std::move(task));
-  mHandle = TaskHandle(mTask.get_future().share(), priority);
-}
-
-Task::Task(PackagedTask<void()> &&task, Uint const &priority) {
-  mTask = std::move(task);
-  mHandle = TaskHandle(mTask.get_future().share(), priority);
+Task::~Task() {
+  if (mHandle != nullptr) {
+    delete mHandle;
+    mHandle = nullptr;
+  }
 }
 
 void Task::AddDependency(TaskHandle *dependency) {
-  if (dependency->GetPriority() > mHandle.GetPriority()) {
+  Uint index = mHandle->GetExecutionIndex();
+  Uint depIndex = dependency->GetExecutionIndex();
+
+  if (depIndex > index) {
     throw Exceptions::ExecutorError(
-        "Dependency priority must be less than task priority.");
+        "Dependency index must be less than or equal to the current task.");
   }
 
+  mHandle->SetExecutionIndex(std::max(index, depIndex + 1));
   mDependencies.push_back(dependency);
-  mHandle.SetPriority(
-      std::max(mHandle.GetPriority(), dependency->GetPriority() + 1));
+}
+
+void Task::AddDependencies(Vec<TaskHandle *> const &dependencies) {
+  for (auto const &dependency : dependencies) {
+    this->AddDependency(dependency);
+  }
 }
 
 void Task::Invoke() {
   for (auto const &dependency : mDependencies) {
-    dependency->Wait();
+    if (dependency != nullptr) {
+      dependency->Wait();
+    }
   }
-
-  mTask();
-}
-
-Task &Task::operator=(Function<void()> &&task) {
-  mTask = PackagedTask<void()>(std::move(task));
-  mHandle.SetFuture(mTask.get_future().share());
-  return *this;
-}
-
-Task &Task::operator=(PackagedTask<void()> &&task) {
-  mTask = std::move(task);
-  mHandle.SetFuture(mTask.get_future().share());
-  return *this;
+  mTarget();
 }
 
 Task &Task::operator=(Task &&other) noexcept {
-  mHandle = std::move(other.mHandle);
-  mDependencies = std::move(other.mDependencies);
-  mTask = std::move(other.mTask);
+  if (this != &other) {
+    mTarget = std::move(other.mTarget);
+    mDependencies = std::move(other.mDependencies);
+    mHandle = other.mHandle;
+    other.mHandle = nullptr;
+  }
   return *this;
 }
 
@@ -123,7 +110,7 @@ Executor::Executor(Uint const &numWorkers) {
 
 Executor::~Executor() {
   {
-    std::lock_guard<std::mutex> lock(mQueueMutex);
+    LockGuard<Mutex> lock(mQueueMutex);
     mStop.store(true);
   }
   mCV.notify_all();
@@ -135,41 +122,14 @@ Executor::~Executor() {
   }
 }
 
-Task &Executor::Schedule(Function<void()> &&task) {
+void Executor::Schedule(Task &&task) {
   {
-    std::lock_guard<std::mutex> lock(mQueueMutex);
-    mTaskQueue.push(Task(std::move(task)));
+    LockGuard<Mutex> lock(mQueueMutex);
+    mTaskQueue.push(std::move(task));
     mNumJobs.fetch_add(1);
     mComplete.store(false);
   }
   mCV.notify_one();
-
-  return mTaskQueue.back();
-}
-
-Task &Executor::Schedule(Uint const &splitCount, Function<void(Uint)> &&task) {
-  Vec<TaskHandle *> handles;
-  {
-    std::lock_guard<std::mutex> lock(mQueueMutex);
-    for (Uint i = 0; i < splitCount; ++i) {
-      Task t = Task([task, i, splitCount] { task(i); });
-      mTaskQueue.push(std::move(t));
-      mNumJobs.fetch_add(1);
-      handles.push_back(mTaskQueue.back().GetHandle());
-    }
-
-    Task dummy = Task([] {});
-    for (auto const &handle : handles) {
-      dummy.AddDependency(handle);
-    }
-    mTaskQueue.push(std::move(dummy));
-
-    mNumJobs.fetch_add(1);
-    mComplete.store(false);
-  }
-  mCV.notify_one();
-
-  return mTaskQueue.back();
 }
 
 } // namespace TerreateCore::Executor

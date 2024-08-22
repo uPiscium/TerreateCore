@@ -82,6 +82,9 @@ typedef std::thread Thread;
 
 template <typename T, typename Container = std::deque<T>>
 using Queue = std::queue<T, Container>;
+template <typename T, typename Container = std::vector<T>,
+          typename Compare = std::less<typename Container::value_type>>
+using PriorityQueue = std::priority_queue<T, Container, Compare>;
 template <typename T> using UniqueLock = std::unique_lock<T>;
 template <typename T> using LockGuard = std::lock_guard<T>;
 template <typename T> using Atomic = std::atomic<T>;
