@@ -1,12 +1,20 @@
 #ifndef __TERREATECORE_DEFINES_HPP__
 #define __TERREATECORE_DEFINES_HPP__
 
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <cstdint>
+#include <deque>
 #include <fstream>
 #include <functional>
+#include <future>
+#include <mutex>
+#include <queue>
 #include <sstream>
 #include <string>
+#include <thread>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -67,11 +75,32 @@ template <typename T> using Set = std::unordered_set<T>;
 template <typename T> using Vec = std::vector<T>;
 template <typename T> using Function = std::function<T>;
 
+// Job system types
+typedef std::mutex Mutex;
+typedef std::condition_variable ConditionVariable;
+typedef std::thread Thread;
+
+template <typename T, typename Container = std::deque<T>>
+using Queue = std::queue<T, Container>;
+template <typename T, typename Container = std::vector<T>,
+          typename Compare = std::less<typename Container::value_type>>
+using PriorityQueue = std::priority_queue<T, Container, Compare>;
+template <typename T> using UniqueLock = std::unique_lock<T>;
+template <typename T> using LockGuard = std::lock_guard<T>;
+template <typename T> using Atomic = std::atomic<T>;
+template <typename T> using SharedFuture = std::shared_future<T>;
+template <typename T> using PackagedTask = std::packaged_task<T>;
+
+typedef SharedFuture<void> Future;
+
 // Chrono types
 namespace chrono = std::chrono;
+typedef chrono::milliseconds MilliSec;
 typedef chrono::nanoseconds NanoSec;
 typedef chrono::system_clock SystemClock;
+typedef chrono::system_clock::time_point SystemTimePoint;
 typedef chrono::steady_clock SteadyClock;
+typedef chrono::steady_clock::time_point SteadyTimePoint;
 template <typename T> using ZonedTimeT = chrono::zoned_time<T>;
 using ZonedTime = ZonedTimeT<NanoSec>;
 
@@ -87,16 +116,25 @@ template <typename T> inline Str ToStr(T const &val) {
   stream << val;
   return stream.str();
 }
+
 template <typename S, typename T> inline S DurationCast(T const &time) {
   return chrono::duration_cast<S>(time);
 }
-inline SteadyClock::duration SinceEpoch() {
-  return SteadyClock::now().time_since_epoch();
-}
+
+inline SteadyTimePoint Now() { return SteadyClock::now(); }
+
+inline SteadyClock::duration SinceEpoch() { return Now().time_since_epoch(); }
+
 inline Double GetNanoSec() {
   return static_cast<Double>(DurationCast<NanoSec>(SinceEpoch()).count()) /
          1000000000;
 }
+
+inline Double GetMilliSec() {
+  return static_cast<Double>(DurationCast<MilliSec>(SinceEpoch()).count()) /
+         1000;
+}
+
 inline ZonedTime GetCurrentTime() {
   return ZonedTime{chrono::current_zone(), SystemClock::now()};
 }
