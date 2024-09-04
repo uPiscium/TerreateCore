@@ -5,6 +5,7 @@
 #include "defines.hpp"
 #include "executor.hpp"
 #include "math.hpp"
+#include "nullable.hpp"
 #include "object.hpp"
 #include "uuid.hpp"
 
