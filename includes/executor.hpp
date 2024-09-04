@@ -4,21 +4,8 @@
 #include "defines.hpp"
 #include "object.hpp"
 
-#include <iostream>
-
-namespace TerreateCore::Executor {
+namespace TerreateCore::Utils {
 using namespace TerreateCore::Defines;
-
-namespace Utils {
-struct JobStamp {
-  Uint id;
-  SteadyTimePoint start;
-  SteadyTimePoint end;
-};
-
-Str CreateJobTimeLine(Vec<JobStamp> const &jobStamps,
-                      SteadyTimePoint const &start, SteadyTimePoint const &end);
-} // namespace Utils
 
 class TaskHandle : public Core::TerreateObjectBase {
 private:
@@ -93,6 +80,6 @@ public:
 
   void WaitForAll() const { mComplete.wait(false); }
 };
-} // namespace TerreateCore::Executor
+} // namespace TerreateCore::Utils
 
 #endif // __TERREATECORE_EXECUTOR_HPP__

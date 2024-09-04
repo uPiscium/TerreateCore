@@ -3,25 +3,8 @@
 
 #include <iostream>
 
-namespace TerreateCore::Executor {
+namespace TerreateCore::Utils {
 using namespace TerreateCore::Defines;
-
-namespace Utils {
-Str CreateJobTimeLine(Vec<JobStamp> const &jobStamps,
-                      SteadyTimePoint const &start,
-                      SteadyTimePoint const &end) {
-  Uint duration = DurationCast<MilliSec>(end - start).count() / 10;
-  Str result(duration, ' ');
-
-  for (auto const &data : jobStamps) {
-    auto begin = result.begin();
-    Uint jobStart = DurationCast<MilliSec>(data.start - start).count() / 10;
-    Uint jobEnd = DurationCast<MilliSec>(data.end - start).count() / 10;
-    std::fill(begin + jobStart, begin + jobEnd, data.id);
-  }
-  return result;
-}
-} // namespace Utils
 
 void TaskHandle::Wait() const {
   if (mFuture.valid()) {
@@ -132,4 +115,4 @@ void Executor::Schedule(Task &&task) {
   mCV.notify_one();
 }
 
-} // namespace TerreateCore::Executor
+} // namespace TerreateCore::Utils
