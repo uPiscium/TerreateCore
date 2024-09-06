@@ -13,7 +13,6 @@ private:
   Str mMessage;
 
 public:
-  TerreateCoreException() noexcept : mMessage("TerreateCore exception") {}
   TerreateCoreException(Str const &message) noexcept : mMessage(message) {}
   virtual ~TerreateCoreException() noexcept {}
 
@@ -24,14 +23,18 @@ public:
 
 class ExecutorError : public TerreateCoreException {
 public:
-  ExecutorError() noexcept : TerreateCoreException("Executor error") {}
   ExecutorError(Str const &message) noexcept : TerreateCoreException(message) {}
 };
 
 class TaskError : public TerreateCoreException {
 public:
-  TaskError() noexcept : TerreateCoreException("Task error") {}
   TaskError(Str const &message) noexcept : TerreateCoreException(message) {}
+};
+
+class NullReferenceException : public TerreateCoreException {
+public:
+  NullReferenceException(Str const &message) noexcept
+      : TerreateCoreException(message) {}
 };
 
 } // namespace TerreateCore::Exceptions
