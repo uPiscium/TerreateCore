@@ -1,8 +1,6 @@
 #include "../includes/executor.hpp"
 #include "../includes/exceptions.hpp"
 
-#include <iostream>
-
 namespace TerreateCore::Utils {
 using namespace TerreateCore::Defines;
 
@@ -10,6 +8,20 @@ void TaskHandle::Wait() const {
   if (mFuture.valid()) {
     mFuture.wait();
   }
+}
+
+Task::Task(Function<void()> const &target) {
+  Str uuid = this->GetUUID();
+  mTarget = PackagedTask<void()>([target, uuid]() {
+    try {
+      target();
+    } catch (std::exception const &e) {
+      Str msg =
+          "Task: " + uuid + " failed with an exception '" + e.what() + "'.";
+      throw Exceptions::ExecutorError(msg);
+    }
+  });
+  mHandle = new TaskHandle(mTarget.get_future().share());
 }
 
 Task::~Task() {
@@ -44,11 +56,13 @@ void Task::Invoke() {
       dependency->Wait();
     }
   }
+
   mTarget();
 }
 
 Task &Task::operator=(Task &&other) noexcept {
   if (this != &other) {
+    Core::TerreateObjectBase::operator=(std::move(other));
     mTarget = std::move(other.mTarget);
     mDependencies = std::move(other.mDependencies);
     mHandle = other.mHandle;
@@ -71,7 +85,15 @@ void Executor::Worker() {
       task = std::move(mTaskQueue.front());
       mTaskQueue.pop();
     }
+
     task.Invoke();
+
+    try {
+      task.GetHandle()->GetFuture().get();
+    } catch (...) {
+      LockGuard<Mutex> lock(mExceptionMutex);
+      mExceptions.push_back(std::current_exception());
+    }
 
     if (mNumJobs.fetch_sub(1) == 1) {
       mComplete.store(true);

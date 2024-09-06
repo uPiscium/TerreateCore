@@ -17,6 +17,7 @@ public:
   TaskHandle(SharedFuture<void> const &future) : mFuture(future) {}
   ~TaskHandle() override {}
 
+  SharedFuture<void> const &GetFuture() const { return mFuture; }
   Uint const &GetExecutionIndex() const { return mExecutionIndex; }
 
   void SetExecutionIndex(Uint const &index) { mExecutionIndex = index; }
@@ -36,11 +37,10 @@ private:
 
 public:
   Task() {}
-  Task(Function<void()> const &target) : mTarget(target) {
-    mHandle = new TaskHandle(mTarget.get_future().share());
-  }
+  Task(Function<void()> const &target);
   Task(Task &&other) noexcept
-      : mTarget(std::move(other.mTarget)),
+      : Core::TerreateObjectBase(std::move(other)),
+        mTarget(std::move(other.mTarget)),
         mDependencies(std::move(other.mDependencies)), mHandle(other.mHandle) {
     other.mHandle = nullptr;
   }
@@ -58,6 +58,9 @@ public:
 
 class Executor : public Core::TerreateObjectBase {
 private:
+  Vec<ExceptionPtr> mExceptions;
+  Mutex mExceptionMutex;
+
   Queue<Task> mTaskQueue;
   Mutex mQueueMutex;
 
@@ -75,6 +78,8 @@ public:
   explicit Executor(
       Uint const &numWorkers = std::thread::hardware_concurrency());
   ~Executor() override;
+
+  Vec<ExceptionPtr> const &GetExceptions() const { return mExceptions; }
 
   void Schedule(Task &&task);
 

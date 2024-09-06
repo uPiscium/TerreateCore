@@ -12,7 +12,7 @@ template <typename T> struct CustomDeleter {
   }
 };
 
-int main() {
+void NullableTest() {
   std::cout << "Nullable Test" << std::endl;
   std::cout << "-------------" << std::endl;
 
@@ -48,6 +48,32 @@ int main() {
   }
   std::cout << std::endl;
   std::cout << "-------------" << std::endl;
+}
 
+void ExecutorTest() {
+  Utils::Executor executor(2);
+
+  Utils::Task successTask([]() { std::cout << "Success Task" << std::endl; });
+  Utils::Task failTask([]() {
+    std::cout << "Fail Task" << std::endl;
+    throw std::runtime_error("Fail Task");
+  });
+
+  executor.Schedule(std::move(successTask));
+  executor.Schedule(std::move(failTask));
+
+  executor.WaitForAll();
+
+  for (auto &exception : executor.GetExceptions()) {
+    try {
+      std::rethrow_exception(exception);
+    } catch (std::exception const &e) {
+      std::cout << e.what() << std::endl;
+    }
+  }
+}
+
+int main() {
+  ExecutorTest();
   return 0;
 }
