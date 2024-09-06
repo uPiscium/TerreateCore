@@ -2,6 +2,7 @@
 #define __TERREATECORE_NULLABLE_HPP__
 
 #include "defines.hpp"
+#include "exceptions.hpp"
 
 namespace TerreateCore::Utils {
 using namespace TerreateCore::Defines;
@@ -9,11 +10,13 @@ using namespace TerreateCore::Defines;
 template <typename T> struct NullableTypeTraits {
   typedef T &RefenceType;
   typedef T const &ConstRefenceType;
+  typedef T &&MoveType;
 };
 
 template <> struct NullableTypeTraits<void> {
   typedef void RefenceType;
   typedef void ConstRefenceType;
+  typedef void MoveType;
 };
 
 template <typename T> struct DefaultDeleter {
@@ -28,6 +31,7 @@ template <typename T, typename Deleter = DefaultDeleter<T>> class Nullable {
 public:
   typedef typename NullableTypeTraits<T>::RefenceType RefenceType;
   typedef typename NullableTypeTraits<T>::ConstRefenceType ConstRefenceType;
+  typedef typename NullableTypeTraits<T>::MoveType MoveType;
 
 private:
   T *mValue;
@@ -35,8 +39,8 @@ private:
 
 public:
   Nullable() : mValue(nullptr) {}
-  Nullable(T const &value) : mValue(new T(value)) {}
-  Nullable(T &&value) : mValue(new T(std::move(value))) {}
+  Nullable(ConstRefenceType value) : mValue(new T(value)) {}
+  Nullable(MoveType value) : mValue(new T(std::move(value))) {}
   Nullable(Nullable const &other)
       : mValue(other.mValue ? new T(*other.mValue) : nullptr) {}
   Nullable(Nullable &&other) : mValue(other.mValue) { other.mValue = nullptr; }
@@ -49,27 +53,84 @@ public:
   ~Nullable() { mDeleter(mValue); }
 
   Bool Valid() const { return mValue != nullptr; }
-  ConstRefenceType Value() const { return *mValue; }
-  RefenceType Value() { return *mValue; }
+  ConstRefenceType Value() const {
+    if (!this->Valid()) {
+      throw Exceptions::NullReferenceException("Nullable is null");
+    } else {
+      return *mValue;
+    }
+  }
+  RefenceType Value() {
+    if (!this->Valid()) {
+      throw Exceptions::NullReferenceException("Nullable is null");
+    } else {
+      return *mValue;
+    }
+  }
+  T const *Get() const { return mValue; }
+  T *Get() { return mValue; }
 
-  ConstRefenceType operator*() const { return *mValue; }
-  RefenceType operator*() { return *mValue; }
+  ConstRefenceType operator*() const {
+    if (!this->Valid()) {
+      throw Exceptions::NullReferenceException("Nullable is null");
+    } else {
+      return *mValue;
+    }
+  }
+  RefenceType operator*() {
+    if (!this->Valid()) {
+      throw Exceptions::NullReferenceException("Nullable is null");
+    } else {
+      return *mValue;
+    }
+  }
   T *operator->() { return mValue; }
 
-  Nullable &operator=(T const &value) {
+  Nullable &operator=(ConstRefenceType value) {
     mDeleter(mValue);
     mValue = new T(value);
     return *this;
   }
-  Nullable &operator=(T &&value) {
+  Nullable &operator=(MoveType value) {
     mDeleter(mValue);
     mValue = new T(std::move(value));
     return *this;
   }
+  Nullable &operator=(Nullable const &other) {
+    if (this != &other) {
+      mDeleter(mValue);
+      mValue = other.mValue ? new T(*other.mValue) : nullptr;
+    }
+    return *this;
+  }
+  Nullable &operator=(Nullable &&other) {
+    if (this != &other) {
+      mDeleter(mValue);
+      mValue = other.mValue;
+      other.mValue = nullptr;
+    }
+    return *this;
+  }
+  template <typename U> Nullable &operator=(Nullable<U> const &other) {
+    mDeleter(mValue);
+    mValue = other.mValue ? new T(*other.mValue) : nullptr;
+    return *this;
+  }
 
-  operator Bool() const { return this->Valid(); }
-  operator ConstRefenceType() const { return *mValue; }
-  operator RefenceType() { return *mValue; }
+  operator ConstRefenceType() const {
+    if (!this->Valid()) {
+      throw Exceptions::NullReferenceException("Nullable is null");
+    } else {
+      return *mValue;
+    }
+  }
+  operator RefenceType() {
+    if (!this->Valid()) {
+      throw Exceptions::NullReferenceException("Nullable is null");
+    } else {
+      return *mValue;
+    }
+  }
 };
 } // namespace TerreateCore::Utils
 
