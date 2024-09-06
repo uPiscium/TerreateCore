@@ -57,7 +57,7 @@ public:
 
   explicit operator T() const { return static_cast<T>(mFlag); }
   explicit operator Flag() const { return mFlag; }
-  explicit operator Bool() const { return mFlag != static_cast<Flag>(0); }
+  operator Bool() const { return mFlag != static_cast<Flag>(0); }
 };
 
 template <enumtype T>

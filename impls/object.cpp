@@ -1,5 +1,7 @@
 #include "../includes/object.hpp"
 
+#include <iostream>
+
 namespace TerreateCore::Core {
 TerreateObjectBase &
 TerreateObjectBase::operator=(TerreateObjectBase const &other) {
@@ -7,7 +9,8 @@ TerreateObjectBase::operator=(TerreateObjectBase const &other) {
   return *this;
 }
 
-TerreateObjectBase &TerreateObjectBase::operator=(TerreateObjectBase &&other) {
+TerreateObjectBase &
+TerreateObjectBase::operator=(TerreateObjectBase &&other) noexcept {
   mUUID = std::move(other.mUUID);
   return *this;
 }

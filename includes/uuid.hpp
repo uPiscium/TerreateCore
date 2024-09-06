@@ -20,10 +20,11 @@ private:
   UUID(Str const &uuid) { std::memcpy(mUUID, uuid.c_str(), sizeof(char) * 16); }
 
 public:
-  UUID() { GenerateUUID(); }
-  UUID(const UUID &other) {
+  UUID() { this->GenerateUUID(); }
+  UUID(UUID const &other) {
     std::memcpy(mUUID, other.mUUID, sizeof(char) * 16);
   }
+  UUID(UUID &&other) { std::memcpy(mUUID, other.mUUID, sizeof(char) * 16); }
 
   Byte const *Raw() const { return mUUID; }
 
