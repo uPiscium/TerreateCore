@@ -13,9 +13,11 @@ public:
   TerreateObjectBase() : mUUID() {}
   TerreateObjectBase(UUID const &uuid) : mUUID(uuid) {}
   TerreateObjectBase(TerreateObjectBase const &other) : mUUID(other.mUUID) {}
+  TerreateObjectBase(TerreateObjectBase &&other) noexcept
+      : mUUID(std::move(other.mUUID)) {}
   virtual ~TerreateObjectBase() {}
 
-  UUID const &GetUUID() const { return mUUID; }
+  UUID const &GetUUID() const noexcept { return mUUID; }
 
   virtual bool operator==(TerreateObjectBase const &other) const {
     return mUUID == other.mUUID;
@@ -37,7 +39,7 @@ public:
   }
 
   virtual TerreateObjectBase &operator=(TerreateObjectBase const &other);
-  virtual TerreateObjectBase &operator=(TerreateObjectBase &&other);
+  virtual TerreateObjectBase &operator=(TerreateObjectBase &&other) noexcept;
 
   virtual operator Str() const { return mUUID.ToString(); }
   virtual operator Byte const *() const { return mUUID.Raw(); }

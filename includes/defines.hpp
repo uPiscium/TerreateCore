@@ -79,6 +79,7 @@ template <typename T> using Function = std::function<T>;
 typedef std::mutex Mutex;
 typedef std::condition_variable ConditionVariable;
 typedef std::thread Thread;
+typedef std::exception_ptr ExceptionPtr;
 
 template <typename T, typename Container = std::deque<T>>
 using Queue = std::queue<T, Container>;
