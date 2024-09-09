@@ -7,54 +7,7 @@
 namespace TerreateCore::Utils {
 using namespace TerreateCore::Defines;
 
-class TaskHandle : public Core::TerreateObjectBase {
-private:
-  SharedFuture<void> mFuture;
-  Uint mExecutionIndex = 0u;
-
-public:
-  TaskHandle() {}
-  TaskHandle(SharedFuture<void> const &future) : mFuture(future) {}
-  ~TaskHandle() override {}
-
-  SharedFuture<void> const &GetFuture() const { return mFuture; }
-  Uint const &GetExecutionIndex() const { return mExecutionIndex; }
-
-  void SetExecutionIndex(Uint const &index) { mExecutionIndex = index; }
-
-  void Wait() const;
-};
-
-class Task : public Core::TerreateObjectBase {
-private:
-  PackagedTask<void()> mTarget;
-  Vec<TaskHandle *> mDependencies;
-  TaskHandle *mHandle = nullptr;
-
-private:
-  Task(Task const &other) = delete;
-  Task &operator=(Task const &other) = delete;
-
-public:
-  Task() {}
-  Task(Function<void()> const &target);
-  Task(Task &&other) noexcept
-      : Core::TerreateObjectBase(std::move(other)),
-        mTarget(std::move(other.mTarget)),
-        mDependencies(std::move(other.mDependencies)), mHandle(other.mHandle) {
-    other.mHandle = nullptr;
-  }
-  ~Task() override;
-
-  TaskHandle *GetHandle() { return mHandle; }
-  TaskHandle const *GetHandle() const { return mHandle; }
-
-  void AddDependency(TaskHandle *dependency);
-  void AddDependencies(Vec<TaskHandle *> const &dependencies);
-  void Invoke();
-
-  Task &operator=(Task &&other) noexcept;
-};
+typedef Function<void()> Runnable;
 
 class Executor : public Core::TerreateObjectBase {
 private:
@@ -81,7 +34,8 @@ public:
 
   Vec<ExceptionPtr> const &GetExceptions() const { return mExceptions; }
 
-  void Schedule(Task &&task);
+  Handle Schedule(Runnable const &target);
+  Handle Schedule(Runnable const &target, Vec<Handle> const &dependencies);
 
   void WaitForAll() const { mComplete.wait(false); }
 };

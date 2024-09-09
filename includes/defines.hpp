@@ -92,7 +92,8 @@ template <typename T> using Atomic = std::atomic<T>;
 template <typename T> using SharedFuture = std::shared_future<T>;
 template <typename T> using PackagedTask = std::packaged_task<T>;
 
-typedef SharedFuture<void> Future;
+typedef SharedFuture<void> Handle;
+typedef PackagedTask<void()> Task;
 
 // Chrono types
 namespace chrono = std::chrono;
