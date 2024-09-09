@@ -6,7 +6,7 @@ using namespace TerreateCore::Defines;
 
 void Executor::Worker() {
   while (true) {
-    PackagedTask<void()> task;
+    Task task;
     {
       UniqueLock<Mutex> lock(mQueueMutex);
       mCV.wait(lock, [this] { return !mTaskQueue.empty() || mStop; });
@@ -20,13 +20,6 @@ void Executor::Worker() {
     }
 
     task();
-
-    try {
-      task.get_future().get();
-    } catch (...) {
-      LockGuard<Mutex> lock(mExceptionMutex);
-      mExceptions.push_back(std::current_exception());
-    }
 
     if (mNumJobs.fetch_sub(1) == 1) {
       mComplete.store(true);
@@ -60,6 +53,20 @@ Executor::~Executor() {
   }
 }
 
+Vec<ExceptionPtr> Executor::GetExceptions() const {
+  Vec<ExceptionPtr> exceptions;
+  for (auto &handle : mHandles) {
+    if (handle.valid()) {
+      try {
+        handle.get();
+      } catch (std::exception const &e) {
+        exceptions.push_back(std::current_exception());
+      }
+    }
+  }
+  return exceptions;
+}
+
 Handle Executor::Schedule(Runnable const &target) {
   Task wrapper([target]() {
     try {
@@ -69,8 +76,8 @@ Handle Executor::Schedule(Runnable const &target) {
       throw Exceptions::ExecutorError(msg);
     }
   });
-
-  SharedFuture<void> future = wrapper.get_future().share();
+  Handle future = wrapper.get_future().share();
+  mHandles.push_back(future);
 
   {
     LockGuard<Mutex> lock(mQueueMutex);
@@ -95,5 +102,4 @@ Handle Executor::Schedule(Runnable const &target,
   });
   return this->Schedule(wrapper);
 }
-
 } // namespace TerreateCore::Utils

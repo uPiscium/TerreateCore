@@ -72,7 +72,26 @@ void ExecutorTest() {
   executor.WaitForAll();
 }
 
+void ExecutorErrorTest() {
+  Utils::Executor executor;
+
+  std::cout << "Executor Test" << std::endl;
+  std::cout << "-------------" << std::endl;
+
+  executor.Schedule([]() { throw std::runtime_error("Task 1"); });
+
+  executor.WaitForAll();
+
+  for (auto &error : executor.GetExceptions()) {
+    try {
+      std::rethrow_exception(error);
+    } catch (const std::exception &e) {
+      std::cout << e.what() << std::endl;
+    }
+  }
+}
+
 int main() {
-  ExecutorTest();
+  ExecutorErrorTest();
   return 0;
 }
