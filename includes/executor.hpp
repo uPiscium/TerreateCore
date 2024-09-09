@@ -11,9 +11,7 @@ typedef Function<void()> Runnable;
 
 class Executor : public Core::TerreateObjectBase {
 private:
-  Vec<ExceptionPtr> mExceptions;
-  Mutex mExceptionMutex;
-
+  Vec<Handle> mHandles;
   Queue<Task> mTaskQueue;
   Mutex mQueueMutex;
 
@@ -32,7 +30,7 @@ public:
       Uint const &numWorkers = std::thread::hardware_concurrency());
   ~Executor() override;
 
-  Vec<ExceptionPtr> const &GetExceptions() const { return mExceptions; }
+  Vec<ExceptionPtr> GetExceptions() const;
 
   Handle Schedule(Runnable const &target);
   Handle Schedule(Runnable const &target, Vec<Handle> const &dependencies);
