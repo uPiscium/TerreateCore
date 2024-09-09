@@ -51,26 +51,25 @@ void NullableTest() {
 }
 
 void ExecutorTest() {
-  Utils::Executor executor(2);
+  Utils::Executor executor;
 
-  Utils::Task successTask([]() { std::cout << "Success Task" << std::endl; });
-  Utils::Task failTask([]() {
-    std::cout << "Fail Task" << std::endl;
-    throw std::runtime_error("Fail Task");
-  });
+  std::cout << "Executor Test" << std::endl;
+  std::cout << "-------------" << std::endl;
 
-  executor.Schedule(std::move(successTask));
-  executor.Schedule(std::move(failTask));
+  Defines::Vec<Utils::SharedFuture<void>> futures;
+  for (int i = 0; i < 4; ++i) {
+    futures.push_back(executor.Schedule([]() {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::cout << "Task 1" << std::endl;
+    }));
+    futures.push_back(executor.Schedule([]() {
+      std::this_thread::sleep_for(std::chrono::seconds(0));
+      std::cout << "Task 2" << std::endl;
+    }));
+  }
+  executor.Schedule([]() { std::cout << "Task 3" << std::endl; }, futures);
 
   executor.WaitForAll();
-
-  for (auto &exception : executor.GetExceptions()) {
-    try {
-      std::rethrow_exception(exception);
-    } catch (std::exception const &e) {
-      std::cout << e.what() << std::endl;
-    }
-  }
 }
 
 int main() {

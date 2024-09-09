@@ -4,76 +4,9 @@
 namespace TerreateCore::Utils {
 using namespace TerreateCore::Defines;
 
-void TaskHandle::Wait() const {
-  if (mFuture.valid()) {
-    mFuture.wait();
-  }
-}
-
-Task::Task(Function<void()> const &target) {
-  Str uuid = this->GetUUID();
-  mTarget = PackagedTask<void()>([target, uuid]() {
-    try {
-      target();
-    } catch (std::exception const &e) {
-      Str msg =
-          "Task: " + uuid + " failed with an exception '" + e.what() + "'.";
-      throw Exceptions::ExecutorError(msg);
-    }
-  });
-  mHandle = new TaskHandle(mTarget.get_future().share());
-}
-
-Task::~Task() {
-  if (mHandle != nullptr) {
-    delete mHandle;
-    mHandle = nullptr;
-  }
-}
-
-void Task::AddDependency(TaskHandle *dependency) {
-  Uint index = mHandle->GetExecutionIndex();
-  Uint depIndex = dependency->GetExecutionIndex();
-
-  if (depIndex > index) {
-    throw Exceptions::ExecutorError(
-        "Dependency index must be less than or equal to the current task.");
-  }
-
-  mHandle->SetExecutionIndex(std::max(index, depIndex + 1));
-  mDependencies.push_back(dependency);
-}
-
-void Task::AddDependencies(Vec<TaskHandle *> const &dependencies) {
-  for (auto const &dependency : dependencies) {
-    this->AddDependency(dependency);
-  }
-}
-
-void Task::Invoke() {
-  for (auto const &dependency : mDependencies) {
-    if (dependency != nullptr) {
-      dependency->Wait();
-    }
-  }
-
-  mTarget();
-}
-
-Task &Task::operator=(Task &&other) noexcept {
-  if (this != &other) {
-    Core::TerreateObjectBase::operator=(std::move(other));
-    mTarget = std::move(other.mTarget);
-    mDependencies = std::move(other.mDependencies);
-    mHandle = other.mHandle;
-    other.mHandle = nullptr;
-  }
-  return *this;
-}
-
 void Executor::Worker() {
   while (true) {
-    Task task;
+    PackagedTask<void()> task;
     {
       UniqueLock<Mutex> lock(mQueueMutex);
       mCV.wait(lock, [this] { return !mTaskQueue.empty() || mStop; });
@@ -86,10 +19,10 @@ void Executor::Worker() {
       mTaskQueue.pop();
     }
 
-    task.Invoke();
+    task();
 
     try {
-      task.GetHandle()->GetFuture().get();
+      task.get_future().get();
     } catch (...) {
       LockGuard<Mutex> lock(mExceptionMutex);
       mExceptions.push_back(std::current_exception());
@@ -127,14 +60,40 @@ Executor::~Executor() {
   }
 }
 
-void Executor::Schedule(Task &&task) {
+Handle Executor::Schedule(Runnable const &target) {
+  Task wrapper([target]() {
+    try {
+      target();
+    } catch (std::exception const &e) {
+      Str msg = "Task failed with an exception '" + Str(e.what()) + "'.";
+      throw Exceptions::ExecutorError(msg);
+    }
+  });
+
+  SharedFuture<void> future = wrapper.get_future().share();
+
   {
     LockGuard<Mutex> lock(mQueueMutex);
-    mTaskQueue.push(std::move(task));
+    mTaskQueue.push(std::move(wrapper));
     mNumJobs.fetch_add(1);
     mComplete.store(false);
   }
   mCV.notify_one();
+
+  return future;
+}
+
+Handle Executor::Schedule(Runnable const &target,
+                          Vec<Handle> const &dependencies) {
+  auto wrapper = ([target, dependencies]() {
+    for (auto const &dependency : dependencies) {
+      if (dependency.valid()) {
+        dependency.wait();
+      }
+    }
+    target();
+  });
+  return this->Schedule(wrapper);
 }
 
 } // namespace TerreateCore::Utils
