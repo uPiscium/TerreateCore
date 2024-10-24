@@ -1,41 +1,46 @@
 #include "../includes/uuid.hpp"
 
 #include <iomanip>
+#include <iostream>
 
 namespace TerreateCore::Core {
 std::mt19937 UUID::sRandomEngine = std::mt19937(std::random_device()());
 
 void UUID::GenerateUUID() {
-  auto time = std::chrono::system_clock::now();
-  time_t epoch = time.time_since_epoch().count();
-  std::memcpy(mUUID, &epoch, sizeof(time_t));
-  for (int i = 0; i < 2; i++) {
+  time_t epoch = SinceEpoch().count();
+  TCu16 const *epochBlock = reinterpret_cast<TCu16 const *>(&epoch);
+  for (int i = 0; i < sizeof(time_t) / sizeof(TCu16); ++i) {
+    std::memcpy(&mUUID[i * sizeof(TCu16)],
+                &epochBlock[(sizeof(time_t) / sizeof(TCu16)) - i - 1],
+                sizeof(TCu16));
+  }
+  Uint randomLength = (sUUIDLength - sizeof(time_t)) / sizeof(TCu32);
+  for (int i = 0; i < randomLength; ++i) {
     TCu32 random = sRandomEngine();
-    std::memcpy(mUUID + sizeof(time_t) + i * sizeof(TCu32), &random,
+    std::memcpy(&mUUID[sizeof(time_t) + i * sizeof(TCu32)], &random,
                 sizeof(TCu32));
   }
 }
 
 Str UUID::ToString() const {
-  std::stringstream ss;
-  for (int i = 0; i < 8; i++) {
+  Stream ss;
+  for (int i = 0; i < sUUIDLength / sizeof(TCu16); ++i) {
     TCi16 block = 0;
-    std::memcpy(&block, mUUID + i * sizeof(TCi16), sizeof(TCi16));
-    std::memcpy(&block, mUUID + i * sizeof(TCi16), sizeof(TCi16));
+    std::memcpy(&block, mUUID + i * sizeof(TCu16), sizeof(TCu16));
     ss << std::hex << std::setfill('0') << std::setw(4) << block;
-    if (i != 7)
+    if (i != (sUUIDLength / 2) - 1)
       ss << "-";
   }
   return ss.str();
 }
 
 UUID &UUID::operator=(UUID const &other) {
-  std::memcpy(mUUID, other.mUUID, sizeof(char) * 16);
+  std::memcpy(mUUID, other.mUUID, sizeof(char) * sUUIDLength);
   return *this;
 }
 
 UUID &UUID::operator=(UUID &&other) {
-  std::memcpy(mUUID, other.mUUID, sizeof(char) * 16);
+  std::memcpy(mUUID, other.mUUID, sizeof(char) * sUUIDLength);
   return *this;
 }
 } // namespace TerreateCore::Core
