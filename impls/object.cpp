@@ -5,7 +5,7 @@
 namespace TerreateCore::Core {
 TerreateObjectBase &
 TerreateObjectBase::operator=(TerreateObjectBase const &other) {
-  mUUID = other.mUUID;
+  mUUID = UUID();
   return *this;
 }
 
