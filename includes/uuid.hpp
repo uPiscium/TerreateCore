@@ -11,43 +11,52 @@ using namespace TerreateCore::Defines;
 
 class UUID {
 private:
-  Byte mUUID[16] = {0};
+  static Uint const sUUIDLength = 32;
+
+private:
+  TCi8 mUUID[sUUIDLength] = {0};
   static std::mt19937 sRandomEngine;
 
 private:
   void GenerateUUID();
-  UUID(Byte const *uuid) { std::memcpy(mUUID, uuid, sizeof(char) * 16); }
-  UUID(Str const &uuid) { std::memcpy(mUUID, uuid.c_str(), sizeof(char) * 16); }
+  UUID(TCi8 const *uuid) {
+    std::memcpy(mUUID, uuid, sizeof(TCi8) * sUUIDLength);
+  }
+  UUID(Str const &uuid) {
+    std::memcpy(mUUID, uuid.c_str(), sizeof(TCi8) * sUUIDLength);
+  }
 
 public:
   UUID() { this->GenerateUUID(); }
   UUID(UUID const &other) {
-    std::memcpy(mUUID, other.mUUID, sizeof(char) * 16);
+    std::memcpy(mUUID, other.mUUID, sizeof(TCi8) * sUUIDLength);
   }
-  UUID(UUID &&other) { std::memcpy(mUUID, other.mUUID, sizeof(char) * 16); }
+  UUID(UUID &&other) {
+    std::memcpy(mUUID, other.mUUID, sizeof(TCi8) * sUUIDLength);
+  }
 
-  Byte const *Raw() const { return mUUID; }
+  TCi8 const *Raw() const { return mUUID; }
 
   Str ToString() const;
   size_t Hash() const { return std::hash<Str>{}(ToString()); }
 
   bool operator==(UUID const &other) const {
-    return std::memcmp(mUUID, other.mUUID, sizeof(char) * 16) == 0;
+    return std::memcmp(mUUID, other.mUUID, sizeof(TCi8) * sUUIDLength) == 0;
   }
   bool operator!=(UUID const &other) const {
-    return std::memcmp(mUUID, other.mUUID, sizeof(char) * 16) != 0;
+    return std::memcmp(mUUID, other.mUUID, sizeof(TCi8) * sUUIDLength) != 0;
   }
   bool operator<(UUID const &other) const {
-    return std::memcmp(mUUID, other.mUUID, sizeof(char) * 16) < 0;
+    return std::memcmp(mUUID, other.mUUID, sizeof(TCi8) * sUUIDLength) < 0;
   }
   bool operator>(UUID const &other) const {
-    return std::memcmp(mUUID, other.mUUID, sizeof(char) * 16) > 0;
+    return std::memcmp(mUUID, other.mUUID, sizeof(TCi8) * sUUIDLength) > 0;
   }
   bool operator<=(UUID const &other) const {
-    return std::memcmp(mUUID, other.mUUID, sizeof(char) * 16) <= 0;
+    return std::memcmp(mUUID, other.mUUID, sizeof(TCi8) * sUUIDLength) <= 0;
   }
   bool operator>=(UUID const &other) const {
-    return std::memcmp(mUUID, other.mUUID, sizeof(char) * 16) >= 0;
+    return std::memcmp(mUUID, other.mUUID, sizeof(TCi8) * sUUIDLength) >= 0;
   }
   UUID &operator=(UUID const &other);
   UUID &operator=(UUID &&other);
@@ -55,7 +64,7 @@ public:
   operator Str() const { return this->ToString(); }
 
 public:
-  static UUID FromChar(Byte const *uuid) { return UUID(uuid); }
+  static UUID FromTCi8(TCi8 const *uuid) { return UUID(uuid); }
   static UUID FromString(Str const &uuid) { return UUID(uuid); }
 };
 } // namespace TerreateCore::Core

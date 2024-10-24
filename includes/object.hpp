@@ -12,7 +12,7 @@ private:
 public:
   TerreateObjectBase() : mUUID() {}
   TerreateObjectBase(UUID const &uuid) : mUUID(uuid) {}
-  TerreateObjectBase(TerreateObjectBase const &other) : mUUID(other.mUUID) {}
+  TerreateObjectBase(TerreateObjectBase const &other) : mUUID(UUID()) {}
   TerreateObjectBase(TerreateObjectBase &&other) noexcept
       : mUUID(std::move(other.mUUID)) {}
   virtual ~TerreateObjectBase() {}
@@ -42,7 +42,7 @@ public:
   virtual TerreateObjectBase &operator=(TerreateObjectBase &&other) noexcept;
 
   virtual operator Str() const { return mUUID.ToString(); }
-  virtual operator Byte const *() const { return mUUID.Raw(); }
+  virtual operator TCi8 const *() const { return mUUID.Raw(); }
   virtual operator size_t() const { return mUUID.Hash(); }
   virtual operator UUID() const { return mUUID; }
   virtual operator Bool() const { return mUUID; }
