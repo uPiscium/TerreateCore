@@ -4,6 +4,19 @@
 
 using namespace TerreateCore;
 
+void UUIDTest() {
+  Core::TerreateObjectBase obj1;
+  Core::TerreateObjectBase obj2;
+  Core::TerreateObjectBase obj3(obj1);
+
+  std::cout << obj1.GetUUID() << std::endl;
+  std::cout << obj2.GetUUID() << std::endl;
+  std::cout << obj3.GetUUID() << std::endl;
+
+  Core::TerreateObjectBase obj4(std::move(obj2));
+  std::cout << obj4.GetUUID() << std::endl;
+}
+
 template <typename T> struct CustomDeleter {
   void operator()(T *ptr) {
     if (ptr) {
