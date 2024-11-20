@@ -104,7 +104,19 @@ void ExecutorErrorTest() {
   }
 }
 
+void EventTest() {
+  Utils::Event<int> event;
+  event.Subscribe([](int i) { std::cout << "Event 1: " << i << std::endl; });
+  event.Subscribe([](int i) { std::cout << "Event 2: " << i << std::endl; });
+  event.Publish(5);
+
+  Utils::Event<> event2;
+  event2.Subscribe([]() { std::cout << "Event 3" << std::endl; });
+  event2.Subscribe([]() { std::cout << "Event 4" << std::endl; });
+  event2.Publish();
+}
+
 int main() {
-  UUIDTest();
+  EventTest();
   return 0;
 }
