@@ -3,6 +3,7 @@
 
 #include "bitflag.hpp"
 #include "defines.hpp"
+#include "event.hpp"
 #include "executor.hpp"
 #include "math.hpp"
 #include "nullable.hpp"
