@@ -44,7 +44,7 @@ public:
    * @brief: Publish the event
    * @param: args: Arguments to be passed to the callback functions
    */
-  void Publish(EventArgs &&...args) {
+  void Publish(EventArgs... args) {
     UniqueLock<Mutex> lock(mEventMutex);
     for (auto &callback : mCallbacks) {
       callback(std::forward<EventArgs>(args)...);

@@ -114,6 +114,14 @@ void EventTest() {
   event2.Subscribe([]() { std::cout << "Event 3" << std::endl; });
   event2.Subscribe([]() { std::cout << "Event 4" << std::endl; });
   event2.Publish();
+
+  Utils::Event<int *> event3;
+  event3.Subscribe([](int *i) { std::cout << "Event 5: " << *i << std::endl; });
+  event3.Subscribe([](int *i) { std::cout << "Event 6: " << *i << std::endl; });
+
+  int i = 5;
+  int *p = &i;
+  event3.Publish(p);
 }
 
 int main() {
