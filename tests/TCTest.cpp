@@ -125,6 +125,6 @@ void EventTest() {
 }
 
 int main() {
-  EventTest();
+  UUIDTest();
   return 0;
 }
