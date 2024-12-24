@@ -22,6 +22,14 @@ void UUID::GenerateUUID() {
   }
 }
 
+UUID::UUID(TCi8 const *uuid) {
+  if (uuid == nullptr) {
+    std::memset(mUUID, 0, sizeof(TCi8) * sUUIDLength);
+    return;
+  }
+  std::memcpy(mUUID, uuid, sizeof(TCi8) * sUUIDLength);
+}
+
 Str UUID::ToString() const {
   Stream ss;
   for (int i = 0; i < sUUIDLength / sizeof(TCu16); ++i) {
@@ -35,7 +43,7 @@ Str UUID::ToString() const {
 }
 
 UUID &UUID::operator=(UUID const &other) {
-  std::memcpy(mUUID, other.mUUID, sizeof(char) * sUUIDLength);
+  this->GenerateUUID();
   return *this;
 }
 
