@@ -19,18 +19,14 @@ private:
 
 private:
   void GenerateUUID();
-  UUID(TCi8 const *uuid) {
-    std::memcpy(mUUID, uuid, sizeof(TCi8) * sUUIDLength);
-  }
+  UUID(TCi8 const *uuid);
   UUID(Str const &uuid) {
     std::memcpy(mUUID, uuid.c_str(), sizeof(TCi8) * sUUIDLength);
   }
 
 public:
   UUID() { this->GenerateUUID(); }
-  UUID(UUID const &other) {
-    std::memcpy(mUUID, other.mUUID, sizeof(TCi8) * sUUIDLength);
-  }
+  UUID(UUID const &other) { this->GenerateUUID(); }
   UUID(UUID &&other) {
     std::memcpy(mUUID, other.mUUID, sizeof(TCi8) * sUUIDLength);
   }
@@ -38,7 +34,7 @@ public:
   TCi8 const *Raw() const { return mUUID; }
 
   Str ToString() const;
-  size_t Hash() const { return std::hash<Str>{}(ToString()); }
+  size_t Hash() const { return std::hash<Str>{}(this->ToString()); }
 
   bool operator==(UUID const &other) const {
     return std::memcmp(mUUID, other.mUUID, sizeof(TCi8) * sUUIDLength) == 0;
@@ -66,6 +62,10 @@ public:
 public:
   static UUID FromTCi8(TCi8 const *uuid) { return UUID(uuid); }
   static UUID FromString(Str const &uuid) { return UUID(uuid); }
+  static UUID Empty() { return UUID(nullptr); }
+  static UUID Copy(UUID const &uuid) {
+    return UUID::FromString(uuid.ToString());
+  }
 };
 } // namespace TerreateCore::Core
 
