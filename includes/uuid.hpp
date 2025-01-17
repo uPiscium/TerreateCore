@@ -26,7 +26,9 @@ private:
 
 public:
   UUID() { this->GenerateUUID(); }
-  UUID(UUID const &other) { this->GenerateUUID(); }
+  UUID(UUID const &other) {
+    std::memcpy(mUUID, other.mUUID, sizeof(TCi8) * sUUIDLength);
+  }
   UUID(UUID &&other) {
     std::memcpy(mUUID, other.mUUID, sizeof(TCi8) * sUUIDLength);
   }
